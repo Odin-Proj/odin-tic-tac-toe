@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div class="form-container">
+      <form id="form-content">
+        <label for="playerX">Player X</label>
+        <input
+          type="text"
+          id="playerX"
+          name="playerX"
+          placeholder="Enter Player X name"
+        />
+
+        <label for="playerO">Player O</label>
+        <input
+          type="text"
+          id="playerO"
+          name="playerO"
+          placeholder="Enter Player O name"
+        />
+
+        <button type="submit" id="start">Start</button>
+        <button type="button" id="restart">Restart</button>
+      </form>
+    </div>
+    
+    <div class="game-board">
+      <table>
+        <tr>
+          <td id="0"></td>
+          <td id="1"></td>
+          <td id="2"></td>
+        </tr>
+        <tr>
+          <td id="3"></td>
+          <td id="4"></td>
+          <td id="5"></td>
+        </tr>
+        <tr>
+          <td id="6"></td>
+          <td id="7"></td>
+          <td id="8"></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- <div class="game-board2">
+      <div class="board-container">
+        <div class="borderh">
+          <img src="img/line-stroke.png" />
+        </div>
+        <div class="board-row">
+          <div class="cell" id="0"></div>
+          <div class="cell" id="1"></div>
+          <div class="cell" id="2"></div>
+        </div>
+
+        <div class="borderh">
+            <img src="img/line-stroke.png" />
+          </div>
+
+        <div class="board-row">
+          <div class="cell" id="3"></div>
+          <div class="cell" id="4"></div>
+          <div class="cell" id="5"></div>
+        </div>
+
+        <div class="borderh">
+            <img src="img/line-stroke.png" />
+          </div>
+
+        <div class="board-row">
+          <div class="cell" id="6"></div>
+          <div class="cell" id="7"></div>
+          <div class="cell" id="8"></div>
+        </div>
+
+        <div class="borderh">
+            <img src="img/line-stroke.png" />
+          </div>
+
+      </div>
+    </div> -->
+
+    <div class="result"></div>
+  </body>
+</html>
