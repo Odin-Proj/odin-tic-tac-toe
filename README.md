@@ -1,1 +1,1 @@
-# odin-tic-tac-toe with bot
+# odin-tic-tac-toe with bot functionality
