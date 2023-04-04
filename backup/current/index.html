@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div class="main-container">
+      <div class="game-title">
+        <h1>Tic Tac Toe</h1>
+      </div>
+
+      <div class="board-container">
+        <div class="form-container">
+          <div class="labels">
+            <label for="playerX">Player X</label>
+            <input
+              type="text"
+              id="playerX"
+              name="playerX"
+              placeholder="Enter Player X name"
+            />
+          </div>
+
+          <div class="labels">
+            <label for="playerO">Player O</label>
+            <input
+              type="text"
+              id="playerO"
+              name="playerO"
+              placeholder="Enter Player O name"
+            />
+          </div>
+          <div class="labels check">
+            <div><label>vs Bot</label></div>
+            <div class="checkbot">
+              <input type="checkbox" class="yep" id="check-apple" />
+              <label for="check-apple"></label>
+            </div>
+          </div>
+          <div class="labels">
+            <button type="button" id="start">Start</button>
+          </div>
+        </div>
+
+        <div class="game-board">
+          <table>
+            <tr>
+              <td id="0"></td>
+              <td id="1"></td>
+              <td id="2"></td>
+            </tr>
+            <tr>
+              <td id="3"></td>
+              <td id="4"></td>
+              <td id="5"></td>
+            </tr>
+            <tr>
+              <td id="6"></td>
+              <td id="7"></td>
+              <td id="8"></td>
+            </tr>
+          </table>
+          <div id="overlay">
+            <div class="result" id="result">
+              <button type="button" id="restart">Restart</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result Display-->
+    <!-- <div class="result" style="color: white">
+      <button type="button" id="restart">Restart</button>
+    </div> -->
+    
+  </body>
+</html>

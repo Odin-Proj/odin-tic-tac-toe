@@ -1,13 +1,17 @@
 // Player Factory
-const player = (name, symbol) => {
-  return { name, symbol };
+const player = (name, symbol, imgSource) => {
+  const img = document.createElement("img");
+  img.src = imgSource;
+  img.alt = symbol;
+  return { name, symbol, imgSource, img };
 };
 
 // Game Module
 const gameBoard = (() => {
-  let gameFinished = false;
-  let currentPlayer = "X";
-
+  let currentPlayer;
+  let gameFinished;
+  let origBoard;
+  // let origBoard = Array.from(Array(9).keys());
   const WINNING_COMBINATIONS = [
     [0, 1, 2],
     [3, 4, 5],
@@ -19,104 +23,240 @@ const gameBoard = (() => {
     [2, 4, 6],
   ];
 
-  // game board functions
-  function checkWin(cells) {
-    for (let i = 0; i < WINNING_COMBINATIONS.length; i++) {
-      const [a, b, c] = WINNING_COMBINATIONS[i];
-      if (
-        cells[a].textContent === currentPlayer &&
-        cells[b].textContent === currentPlayer &&
-        cells[c].textContent === currentPlayer
-      ) {
-        gameFinished = true;
-        gameController.resultDisplay.textContent = `${currentPlayer} won!`;
-        if (gameController.player1.symbol === currentPlayer) {
-          gameController.resultDisplay.textContent = `${gameController.player1.name} won!`;
-        } else {
-          gameController.resultDisplay.textContent = `${gameController.player2.name} won!`;
-        }
-        currentPlayer = 'X';
+  function setCurrentPlayer(player) {
+    currentPlayer = player;
+  }
+
+  function setOrigBoard(board) {
+    origBoard = board;
+  }
+
+  function setGameFinished(value) {
+    gameFinished = value;
+  }
+
+  function turnClick(square) {
+    if (typeof origBoard[square.target.id] === "number" && !gameFinished && !checkTie()) {
+      // switching between AI and players
+      if (gameController.getVsBot()) {
+        turn(square.target.id, gameController.playerX);
+        if (!checkTie()) turn(bestSpot(), gameController.bot);
+      } else {
+        turn(square.target.id, currentPlayer);
+        currentPlayer =
+          currentPlayer.symbol === "X"
+            ? gameController.playerO
+            : gameController.playerX;
       }
     }
-    if (
-      !gameFinished &&
-      Array.from(cells).every((cell) => cell.textContent !== "")
-    ) {
-      gameFinished = true;
-      gameController.resultDisplay.textContent = "It's a draw!";
-      currentPlayer = 'X';
+  }
+
+  function turn(squareId, player) {
+    origBoard[squareId] = player.symbol;
+    document.getElementById(squareId).innerHTML = player.img.outerHTML;
+
+    // checking for wins
+    let gameWon = checkWin(origBoard, player);
+    if (gameWon) gameOver(gameWon);
+  }
+
+  function checkWin(board, player) {
+    let plays = board.reduce(
+      (a, e, i) => (e === player.symbol ? a.concat(i) : a),
+      []
+    );
+
+    let gameWon = null;
+    for (let [index, win] of WINNING_COMBINATIONS.entries()) {
+      if (win.every((elem) => plays.indexOf(elem) > -1)) {
+        gameWon = { index, player: player };
+        break;
+      }
+    }
+    return gameWon;
+  }
+
+  function gameOver(gameWon) {
+    gameFinished = true;
+    for (let index of WINNING_COMBINATIONS[gameWon.index]) {
+      document.getElementById(index).style.backgroundColor =
+        gameWon.player.symbol === "X" ? "blue" : "red";
+    }
+
+    if (gameController.getVsBot()) {
+      declareWinner(gameWon.player.symbol === "X" ? "You Win!" : "You Lose");
+    } else {
+      declareWinner(
+        gameWon.player.symbol === "X"
+          ? `${gameController.playerX.name} wins!`
+          : `${gameController.playerO.name} wins!`
+      );
     }
   }
 
-  function handleCellClick(cells, clickedCell) {
-    // console.log(gameFinished);
-    console.log(currentPlayer);
-    if (gameFinished || clickedCell.textContent !== "") return;
-    clickedCell.innerHTML = currentPlayer;
-    checkWin(cells);
-    currentPlayer = currentPlayer === "X" ? "O" : "X";
+  function declareWinner(who) {
+    overlay.style.display = "block";
+    document.getElementById("result-display").innerHTML = who;
   }
 
-  function setCurrentPlayer(symbol) {
-    currentPlayer = symbol;
+  function emptySquares() {
+    return origBoard.filter((s) => typeof s === "number");
   }
 
-  function setGameFinished(isGameFinisihed) {
-    gameFinished = isGameFinisihed;
+  function bestSpot() {
+    return minimax(origBoard, gameController.bot).index;
   }
 
-  // return
+  function checkTie() {
+    if (emptySquares().length === 0) {
+      for (let i = 0; i < gameController.cells.length; i++) {
+        gameController.cells[i].style.backgroundColor = "green";
+        gameController.cells[i].removeEventListener("click", turnClick, false);
+      }
+      gameFinished = true;
+      declareWinner("It's a Tie");
+      return true;
+    }
+    return false;
+  }
+
+  function minimax(newBoard, player) {
+    let availSpots = emptySquares(newBoard);
+
+    if (checkWin(newBoard, player)) {
+      return { score: -10 };
+    } else if (checkWin(newBoard, gameController.bot)) {
+      return { score: 20 };
+    } else if (availSpots.length === 0) {
+      return { score: 0 };
+    }
+
+    let moves = [];
+    for (let i = 0; i < availSpots.length; i++) {
+      let move = [];
+      move.index = newBoard[availSpots[i]];
+      newBoard[availSpots[i]] = player.symbol;
+
+      if (player.symbol === gameController.bot.symbol) {
+        let result = minimax(newBoard, gameController.playerX);
+        move.score = result.score;
+      } else {
+        let result = minimax(newBoard, gameController.bot);
+        move.score = result.score;
+      }
+
+      newBoard[availSpots[i]] = move.index;
+
+      moves.push(move);
+    }
+
+    let bestMove;
+    if (player.symbol === gameController.bot.symbol) {
+      let bestScore = -10000;
+      for (let i = 0; i < moves.length; i++) {
+        if (moves[i].score > bestScore) {
+          bestScore = moves[i].score;
+          bestMove = i;
+        }
+      }
+    } else {
+      let bestScore = 10000;
+      for (let i = 0; i < moves.length; i++) {
+        if (moves[i].score < bestScore) {
+          bestScore = moves[i].score;
+          bestMove = i;
+        }
+      }
+    }
+    return moves[bestMove];
+  }
+
   return {
+    origBoard,
     setCurrentPlayer,
-    setGameFinished,
-    handleCellClick,    
+    turnClick,
+    setOrigBoard,
+    setGameFinished
   };
 })();
 
+// Utility Module
+const utils = (() => {
+  function getPlayerName(player, element) {
+    let timeoutId;
+    element.addEventListener("input", (event) => {
+      event.preventDefault();
+      // this is to clear out all previous timeout before starting another
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        player.name = event.target.value;
+      }, 500); // delay of 500ms
+    });
+  }
+
+  return { getPlayerName };
+})();
+
+// Game Controller
 const gameController = (() => {
+  // get all cells in the table
   const cells = document.querySelectorAll("td");
   const resultDisplay = document.querySelector(".result");
-  const restart = document.getElementById("restart");
-  const start = document.getElementById("start");
-  const formContent = document.getElementById("form-content");
-  const player1 = player("X", "X");
-  const player2 = player("O", "O");
 
-  function setupEventListeners() {
-    // adding eventlisteners to start and restart button
-    restart.addEventListener("click", () => {
-      gameBoard.setGameFinished(false);
-      resultDisplay.textContent = "";
-      gameBoard.setCurrentPlayer("X");
-      cells.forEach((cell) => {
-        cell.textContent = "";
-      });
+  // get start button
+  const start = document.getElementById("start");
+  const overlay = document.getElementById("overlay");
+
+  // get input elements
+  const playerXNameElement = document.getElementById("playerX");
+  const playerONameElement = document.getElementById("playerO");
+  const botCheck = document.getElementById("check-apple");
+
+  //   creating player objects
+  let playerX = player("X", "X", "./img/X-Stroke.png");
+  let playerO = player("O", "O", "./img/O-Stroke.png");
+  let bot = player("bot", "O", "./img/O-Stroke.png");
+
+  let vsBot = false;
+
+  // return true if playing against bot
+  function getVsBot() {
+    return vsBot;
+  }
+
+  //   attach eventlisteners to elements
+  function setUpEventListeners() {
+    // check box for bot
+    botCheck.addEventListener("change", (event) => {
+      event.preventDefault();
+      if (event.target.checked) {
+        vsBot = true;
+      } else {
+        vsBot = false;
+      }
     });
 
+    // getting player names from input
+    utils.getPlayerName(playerX, playerXNameElement);
+    utils.getPlayerName(playerO, playerONameElement);
+
+    // adding events to start button
     start.addEventListener("click", (e) => {
       e.preventDefault();
 
-      // Creating player objects
-      let name1 = formContent.elements["playerX"].value;
-      if (name1 !== '') {
-        player1.name = name1;
-      }
-      let name2 = formContent.elements["playerO"].value;
-      if (name2 !== '') {
-        player2.name = name2;
-      }
+      overlay.style.display = "none";
+      start.innerText = "Restart";
 
-      // player1.name = formContent.elements["playerX"].value;
-      // player2.name = formContent.elements["playerO"].value;
+      gameBoard.setCurrentPlayer(playerX);
+      gameBoard.setOrigBoard(Array.from(Array(9).keys()));
+      gameBoard.setGameFinished(false);
 
-      console.log(JSON.stringify(player1));
-      console.log(JSON.stringify(player2));
-
-      // adding eventlisteners to put X or O on board
+      //   gameBoard.origBoard = Array.from(Array(9).keys());
       cells.forEach((cell) => {
-        cell.addEventListener("click", () => {
-          gameBoard.handleCellClick(cells, cell);
-          console.log("clicked");
+        cell.innerHTML = "";
+        cell.style.removeProperty("background-color");
+        cell.addEventListener("click", (event) => {
+          gameBoard.turnClick(event);
         });
       });
     });
@@ -124,10 +264,14 @@ const gameController = (() => {
 
   return {
     resultDisplay,
-    player1,
-    player2,
+    playerX,
+    playerO,
+    bot,
+    overlay,
+    cells,
+    getVsBot,
     init() {
-      setupEventListeners();
+      setUpEventListeners();
     },
   };
 })();
